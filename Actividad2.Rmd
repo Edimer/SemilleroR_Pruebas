@@ -1,0 +1,254 @@
+---
+title: "Actividad 2"
+author: "Edimer David Jaramillo, Luis Gabriel González Herrera"
+date: "1 de octubre de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Coerción en R
+
+La coerción en R es de dos tipos:
+
+  - Implícita
+  - Explícita
+
+```{r}
+# Implícita
+coer.imp <- c(2, "Texto", TRUE)
+coer.imp
+class(coer.imp) #Class para obtener el tipo de dato
+```
+
+```{r}
+# Explícita
+as.numeric(coer.imp)
+as.logical(coer.imp)
+```
+
+```{r}
+#Esta es una lista
+mi.lista1 <- list(a1 = c(1, 2), a2 = c("Rojo", "Verde"),
+                  a3 = factor(x = c("Hombre", "Mujer")))
+mi.lista1
+df <- as.data.frame(mi.lista1)
+```
+
+# Subconjuntos en R
+
+```{r}
+# Subconjuntos de vectores
+prueba <- c(2, 4, 6, 20, 50)
+prueba[1] #posición 1
+prueba[c(1, 5)] #posición 1 y 5
+prueba[1:3] #obteniendo secuencia de 1 a 3.
+```
+
+```{r}
+# Subconjuntos de matrices
+prueba2 <- matrix(data = c(10, 15, 20, 50), nrow = 3, ncol = 2)
+prueba2
+prueba2[2, 1]
+prueba2[c(2, 3), 2]
+```
+
+```{r}
+#Subconjuntos de listas
+mi.lista1
+mi.lista1$a2
+mi.lista1$a2[2]
+mi.lista1[[2]][2]
+```
+
+```{r}
+#Subconjuntos en bases de datos
+head(iris)
+iris[1,]
+iris[iris$Sepal.Length > 6.5, ]
+iris[iris$Sepal.Length > 6.5, "Species"]
+```
+
+# Concatenar datos
+
+Para concatenar datos existen dos funciones de gran utilidad:
+
+  - cbind: pega por columnas
+  - rbind: pega por filas
+
+```{r}
+x <- c(1:5)
+x
+y <- c(6:10)
+y
+
+#Concatenando por fila
+rbind(y, x)
+
+#Concatenando por columna
+cbind(x, y)
+```
+
+# Lectura de datos
+
+```{r, eval=FALSE}
+creditos <- read.csv(file = "Colocaciones_De_Credito_Sector_Agropecuario_2017.csv",
+                     sep = ",", encoding = "UTF-8")
+head(creditos)
+```
+
+# Escritura de datos
+
+```{r, eval=FALSE}
+write.csv(x = creditos, file = "Creditos.csv", row.names = FALSE)
+```
+
+# Conversión a formato .Rdata
+
+  - save(): guardar en formato .Rdata.
+  - load(): importar en formato .Rdata.
+  
+```{r, eval=FALSE}
+save(creditos, file = "Creditos_2017.Rdata")
+```
+
+```{r}
+load(file = "Creditos_2017.Rdata")
+```
+
+# Actividad 2
+
+```{r}
+load(file = "Creditos_2017.Rdata")
+```
+
+## Estructura interna
+
+```{r}
+str(creditos)
+```
+
+# Dimensión de la base de datos
+
+```{r}
+dim(creditos)
+```
+
+# Créditos 2
+
+```{r}
+filas <- creditos$Valor.Inversion >= 100000 & creditos$Valor.Inversion <= 500000000
+columnas <- c("Mes", "Tipo.Productor", "Valor.Inversion",
+              "Departamento.Inversion", "Departamento.de.Colocacion.de.Credito",
+              "Plazo", "Genero") 
+
+creditos2 <- creditos[filas, columnas]
+```
+
+# Cambiando nombres de créditos 2
+
+```{r}
+names(creditos2)
+names(creditos2) <- c("Mes", "TipoPro", "Valor", "DeptoInv",
+                      "DeptoCol", "Plazo", "Genero")
+names(creditos2)
+```
+
+# Estructura interna de créditos 2
+
+```{r}
+str(creditos2)
+creditos2$Mes <- as.factor(creditos2$Mes) #una manera
+creditos2[, 1] <- as.factor(creditos2[, 1]) #segunda manera
+creditos2[, "Mes"] <- as.factor(creditos2[, "Mes"]) #tercera manera
+
+str(creditos2)
+```
+
+# Frecuencia absoluta por género
+
+```{r}
+table(creditos2$Genero)
+```
+
+# Frecuencia relativa por género
+
+```{r}
+prop.table(table(creditos2$Genero))
+```
+
+**Conclusión:** de 410942 créditos agropecuarios ejecutados en el año 2017, 270328 corresponden a hombres, 115828 a mujeres y 24786 a sociedades. En términos porcentuales dichos resultados equivalen a 65.78%, 28.18% y 6.03%, para hombres, mujeres y sociedades, respectivamente.
+
+# Frecuencia relativa por tipo de productor
+
+```{r}
+prop.table(table(creditos2$TipoPro)) * 100
+```
+
+# Créditos mensuales en Antioquia
+
+```{r}
+#Filtrando Antioquia
+credAnt <- creditos2[creditos2$DeptoInv == "ANTIOQUIA", ]
+
+# Frecuencia absoluta por mes en Antioquia
+table(credAnt$Mes)
+```
+
+# Departamento de inversión vs colocación
+
+```{r}
+fabs <- table(creditos2$DeptoInv == creditos2$DeptoCol)
+fabs
+prop.table(fabs)
+```
+
+```{r}
+#Diferentes
+table(creditos2$DeptoInv != creditos2$DeptoCol)
+```
+
+
+# Consultas
+
+## Consulta 1
+
+¿En qué departamento existe la mayor inversión?
+
+```{r}
+# Promedio de inversión
+medias <- tapply(creditos2$Valor, creditos2$DeptoInv, mean)
+max(medias) #Amazonas
+min(medias) #Vaupés
+medias
+
+# Máximo
+maximo <- tapply(creditos2$Valor, creditos2$DeptoInv, max)
+maximo
+
+# Sumatoria del valor de inversión por departamento
+sumatoria <- tapply(creditos2$Valor, creditos2$DeptoInv, sum)
+sumatoria
+```
+
+## Consulta 2
+
+¿Cómo es la frecuencia absoluta por género en cada departamento?
+
+```{r}
+table(creditos2$DeptoInv, creditos2$Genero)
+prop.table(table(creditos2$DeptoInv, creditos2$Genero)) * 100
+```
+
+## Consulta 3
+
+¿El plazo de los créditos es igual entre hombres y mujeres?
+
+```{r}
+tapply(creditos2$Plazo, creditos2$Genero, mean)
+tapply(creditos2$Plazo, creditos2$Genero, max)
+
+```
+
